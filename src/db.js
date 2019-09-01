@@ -151,7 +151,9 @@ const createIndices = ( props, currPath, collection ) => {
     }
 }
 
+let dbSymbol = Symbol.for( "muffins.db")
 module.exports = {
+    dbSymbol: dbSymbol,
     init: async( config ) => new Promise( ( resolve, reject ) => {
         MongoClient.connect( config.url, {
             poolSize: config.poolSize || 20,
@@ -162,7 +164,7 @@ module.exports = {
                 return
             }
             let mongodb = client.db( config.dbName )
-            let collections = {}
+            let db = {}
             let schemas = config.schemaDir ? findSchemas( config ) : config.schemas
             if(!schemas){
                 throw new Error("You must provide schemas")
@@ -174,13 +176,17 @@ module.exports = {
 
                 createIndices( schemas[ schemaName ].properties, null, mongoCollection )
 
-                collections[ schemaName ] = dbCollection(
+                db[ schemaName ] = dbCollection(
                     schemaName,
                     ( item ) => tv4.validateMultiple( item, schemaName, true, true ),
                     mongoCollection
                 )
             }
-            resolve( collections )
+            if(Object.getOwnPropertySymbols(global).indexOf(dbSymbol) === -1){
+                global[dbSymbol] = {db}
+            }
+
+            resolve( db )
         } )
     } )
 }
