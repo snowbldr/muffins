@@ -1,7 +1,7 @@
 const db = require('./src/db')
 module.exports = {
     init: db.init,
-    getDb(){
+    db(){
         return global[db.dbSymbol]
     }
 }
