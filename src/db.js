@@ -157,7 +157,8 @@ module.exports = {
     init: async( config ) => new Promise( ( resolve, reject ) => {
         MongoClient.connect( config.url, {
             poolSize: config.poolSize || 20,
-            useNewUrlParser: true
+            useNewUrlParser: true,
+            useUnifiedTopology: true
         }, ( err, client ) => {
             if( err ) {
                 reject( err )
