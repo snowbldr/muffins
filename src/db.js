@@ -19,14 +19,14 @@ const DBError = (code, message, errors) => (
 )
 
 const findSchemas = ( { schemaDir } ) => {
-    // let fullPath = path.resolve( schemaDir )
-    return fs.readdirSync( schemaDir, { withFileTypes: true } )
+    let fullPath = path.resolve( schemaDir )
+    return fs.readdirSync( fullPath, { withFileTypes: true } )
              .filter( f => !f.isDirectory() )
              .filter( f => f.name.endsWith( '.js' ) )
              .reduce( ( i, f ) => {
                  let name = f.name.split( '.js' )[ 0 ]
                  return Object.assign( i,
-                                       { [ name ]: baseItem( name, require( path.join( schemaDir, f.name ) ) ) } )
+                                       { [ name ]: baseItem( name, require( path.join( fullPath, f.name ) ) ) } )
              }, {} )
 }
 
