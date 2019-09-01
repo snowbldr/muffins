@@ -26,7 +26,7 @@ const findSchemas = ( { schemaDir } ) => {
              .reduce( ( i, f ) => {
                  let name = f.name.split( '.js' )[ 0 ]
                  return Object.assign( i,
-                                       { [ name ]: baseItem( name, require( path.join( fullPath, f.name ) ) ) } )
+                                       { [ name ]: baseItem( name, require( path.join( schemaDir, f.name ) ) ) } )
              }, {} )
 }
 
