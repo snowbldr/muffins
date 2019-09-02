@@ -151,43 +151,52 @@ const createIndices = ( props, currPath, collection ) => {
     }
 }
 
+const connect = ()=> new Promise( ( resolve, reject ) => {
+    MongoClient.connect( dbConfig.url, {
+        poolSize: dbConfig.poolSize || 20,
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    }, ( err, client ) => {
+        if( err ) {
+            reject( err )
+            return
+        }
+        let mongodb = client.db( dbConfig.dbName )
+        let db = {}
+        let schemas = dbConfig.schemaDir ? findSchemas( dbConfig ) : dbConfig.schemas
+        if(!schemas){
+            throw new Error("You must provide schemas")
+        }
+        for( let schemaName in schemas ) {
+            tv4.addSchema( schemaName, schemas[ schemaName ] )
+
+            let mongoCollection = mongodb.collection( schemaName )
+
+            createIndices( schemas[ schemaName ].properties, null, mongoCollection )
+
+            db[ schemaName ] = dbCollection(
+                schemaName,
+                ( item ) => tv4.validateMultiple( item, schemaName, true, true ),
+                mongoCollection
+            )
+        }
+        if(Object.getOwnPropertySymbols(global).indexOf(dbSymbol) === -1){
+            global[dbSymbol] = db
+        }
+        Console.log("muffins ready!")
+        resolve( db )
+    } )
+} )
+
 let dbSymbol = Symbol.for( "muffins.db")
+let dbConfig = {
+    current: {}
+};
 module.exports = {
     dbSymbol: dbSymbol,
-    init: async( config ) => new Promise( ( resolve, reject ) => {
-        MongoClient.connect( config.url, {
-            poolSize: config.poolSize || 20,
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        }, ( err, client ) => {
-            if( err ) {
-                reject( err )
-                return
-            }
-            let mongodb = client.db( config.dbName )
-            let db = {}
-            let schemas = config.schemaDir ? findSchemas( config ) : config.schemas
-            if(!schemas){
-                throw new Error("You must provide schemas")
-            }
-            for( let schemaName in schemas ) {
-                tv4.addSchema( schemaName, schemas[ schemaName ] )
-
-                let mongoCollection = mongodb.collection( schemaName )
-
-                createIndices( schemas[ schemaName ].properties, null, mongoCollection )
-
-                db[ schemaName ] = dbCollection(
-                    schemaName,
-                    ( item ) => tv4.validateMultiple( item, schemaName, true, true ),
-                    mongoCollection
-                )
-            }
-            if(Object.getOwnPropertySymbols(global).indexOf(dbSymbol) === -1){
-                global[dbSymbol] = {db}
-            }
-
-            resolve( db )
-        } )
-    } )
+    async get(){
+        if(!dbConfig.current) throw "you must init muffins with the config before getting the db"
+        return global[dbSymbol] ? global[dbSymbol] : connect()
+    },
+    init: ( config ) => dbConfig.current = config
 }
