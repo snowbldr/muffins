@@ -46,27 +46,9 @@ const toggleDelete = ( isDelete, mongoCollection ) => ( _id ) => new Promise( ( 
     } )
 } )
 
-const find = ( deleted, mongoCollection ) => ( page, pageSize, query ) => new Promise( ( resolve, reject ) => {
-    let limit = pageSize && parseInt( pageSize ) || 10
-    let skip = ( page && parseInt( page ) || 0 ) * limit
-
-    let deletedQuery = deleted ? {} : { _isDeleted: false }
-
-    mongoCollection.find( Object.assign( ( query || {} ), deletedQuery ), { limit, skip } ).toArray( ( err, docs ) => {
-        err ? reject( err ) : resolve( docs )
-    } )
-} )
-
 const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
     save: ( newDoc, allowUpdateToDeletedRecord = false ) => new Promise( ( resolve, reject ) => {
         let validation = validate( newDoc )
-
-        if( !validation.valid ) {
-            throw DBError( 400, 'Request body is invalid', validation.errors.map( e => ( {
-                message: e.message,
-                prop: e.dataPath.substr( 1 ).replace( '/', '.' )
-            } ) ) )
-        }
 
         if( !newDoc._id ) {
             newDoc._id = uuid()
@@ -75,6 +57,13 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
             newDoc._isDeleted = false
         } else {
             newDoc._updated = new Date().getTime()
+        }
+
+        if( !validation.valid ) {
+            throw DBError( 400, 'Request body is invalid', validation.errors.map( e => ( {
+                message: e.message,
+                prop: e.dataPath.substr( 1 ).replace( '/', '.' )
+            } ) ) )
         }
 
         let query = { _id: newDoc._id }
@@ -89,7 +78,16 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
             }
         } )
     } ),
-    find: find( false, mongoCollection ),
+    find: ( page, pageSize, query, includeDeleted = false ) => new Promise( ( resolve, reject ) => {
+        let limit = pageSize && parseInt( pageSize ) || 10
+        let skip = ( page && parseInt( page ) || 0 ) * limit
+
+        let deletedQuery = includeDeleted ? {} : { _isDeleted: false }
+
+        mongoCollection.find( Object.assign( ( query || {} ), deletedQuery ), { limit, skip } ).toArray( ( err, docs ) => {
+            err ? reject( err ) : resolve( docs )
+        } )
+    } ),
     patch: ( patch, allowUpdateToDeletedRecord = false ) => new Promise( ( resolve, reject ) => {
         if( !patch._id ) {
             throw DBError( 400, '_id required', 'You must include an _id field with your patch' )
@@ -119,7 +117,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
     } ),
     delete: toggleDelete( true, mongoCollection ),
     recover: toggleDelete( false, mongoCollection ),
-    findAll: find( true, mongoCollection )
+    mongoCollection
 } )
 
 const toPathStrings = ( next, currPath, paths, depth, filter ) => {

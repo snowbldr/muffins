@@ -1,6 +1,6 @@
 #Muffins
 
-> MongoDB repositories based on json-schema, not fully baked yet
+> MongoDB collection wrapper with json-schema validation, not fully baked yet
 
 Ingredients:
  - Official mongo driver
@@ -32,7 +32,7 @@ require('muffins').init({
 })
 ```
 
-Then in other places, to use your 
+To use your collections 
 ```js
 const db = require('muffins').db
 
@@ -80,4 +80,23 @@ If schema dir is set, muffins will recursively search the directory for js and j
 
 You can overwrite any default by setting it. 
 
-You can provide additional settings to the `MongoClient.connect()` call by setting them on `config.conn`
+You can provide additional settings to the `MongoClient.connect()` call by setting them on `config.conn`.
+
+###db
+The object returned by the db method has the following methods
+```js
+ db = {
+    async save( doc, allowUpdateToDeletedRecord = false ){},
+    async find( page, pageSize, query, includeDeleted = false ){},
+    async patch( patch, allowUpdateToDeletedRecord = false ){},
+    async delete(id){},
+    async recover(id){},
+    mongoCollection
+}
+```
+
+ - **save**: upsert the document
+ - **find**: find pages of documents
+ - **patch**: update only specific properties of a document
+ - **delete**: perform a soft delete
+ - **recover**: undo a soft delete
