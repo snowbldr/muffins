@@ -157,7 +157,11 @@ const connect = ()=> new Promise( ( resolve, reject ) => {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         reconnectTries: Number.MAX_VALUE,
-        bufferMaxEntries: 0
+        bufferMaxEntries: 0,
+        server: {
+            socketTimeoutMS: dbConfig.socketTimeout || 3000,
+            connectTimeoutMS: dbConfig.connectTimeout || 10000
+        }
     }, ( err, client ) => {
         if( err ) {
             reject( err )
