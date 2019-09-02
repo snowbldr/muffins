@@ -158,10 +158,8 @@ const connect = ()=> new Promise( ( resolve, reject ) => {
         useUnifiedTopology: true,
         reconnectTries: Number.MAX_VALUE,
         bufferMaxEntries: 0,
-        server: {
-            socketTimeoutMS: dbConfig.socketTimeout || 3000,
-            connectTimeoutMS: dbConfig.connectTimeout || 10000
-        }
+        socketTimeoutMS: dbConfig.socketTimeout || 3000,
+        connectTimeoutMS: dbConfig.connectTimeout || 10000
     }, ( err, client ) => {
         if( err ) {
             reject( err )
