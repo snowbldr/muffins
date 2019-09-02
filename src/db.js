@@ -18,11 +18,12 @@ const DBError = (code, message, errors) => (
     }
 )
 
-const findSchemas = ( { schemaDir } ) => {
+const findSchemas = ( schemaDir ) => {
+    if(!schemaDir) return []
     let fullPath = path.resolve( schemaDir )
     return fs.readdirSync( fullPath, { withFileTypes: true } )
              .filter( f => !f.isDirectory() )
-             .filter( f => f.name.endsWith( '.js' ) )
+             .filter( f => f.name.endsWith( '.js' ) || f.name.endsWith('.json') )
              .reduce( ( i, f ) => {
                  let name = f.name.split( '.js' )[ 0 ]
                  return Object.assign( i,
@@ -152,22 +153,14 @@ const createIndices = ( props, currPath, collection ) => {
 }
 
 const connect = ()=> new Promise( ( resolve, reject ) => {
-    MongoClient.connect( dbConfig.url, {
-        poolSize: dbConfig.poolSize || 20,
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        reconnectTries: Number.MAX_VALUE,
-        bufferMaxEntries: 0,
-        socketTimeoutMS: dbConfig.socketTimeout || 3000,
-        connectTimeoutMS: dbConfig.connectTimeout || 10000
-    }, ( err, client ) => {
+    MongoClient.connect( dbConfig.url, dbConfig.conn, ( err, client ) => {
         if( err ) {
             reject( err )
             return
         }
-        let mongodb = client.db( dbConfig.dbName )
+        let mongodb = client.db()
         let db = {}
-        let schemas = dbConfig.schemaDir ? findSchemas( dbConfig ) : dbConfig.schemas
+        let schemas = findSchemas( dbConfig.schemaDir ).concat(dbConfig.schemas||[])
         if(!schemas){
             throw new Error("You must provide schemas")
         }
@@ -200,5 +193,19 @@ module.exports = {
         if(!dbConfig) throw "you must init muffins with the config before getting the db"
         return global[dbSymbol] ? global[dbSymbol] : connect()
     },
-    init: ( config ) => dbConfig = config
+    init: ( config ) => {
+        dbConfig = config
+        dbConfig.conn = Object.assign(
+            {
+                poolSize: 20,
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+                reconnectTries: Number.MAX_VALUE,
+                bufferMaxEntries: 0,
+                socketTimeoutMS: 3000,
+                connectTimeoutMS: 10000
+            },
+            config.conn
+        )
+    }
 }
