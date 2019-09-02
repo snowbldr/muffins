@@ -76,7 +76,7 @@ let muffins ={
 }
 ```
 
-If schema dir is set, muffins will recursively search the directory for js and json files. The default export will be used and the name of the file will be used for the collection name.
+If schema dir is set, muffins will search the directory (not recursively) for js and json files. The default export will be used and the name of the file will be used for the collection name.
 
 You can overwrite any default by setting it. 
 
