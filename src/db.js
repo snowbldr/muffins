@@ -26,9 +26,8 @@ const findSchemas = ( schemaDir ) => {
              .filter( f => f.name.endsWith( '.js' ) || f.name.endsWith('.json') )
              .reduce( ( i, f ) => {
                  let name = f.name.split( '.js' )[ 0 ]
-                 return Object.assign( i,
-                                       { [ name ]: baseItem( name, require( path.join( fullPath, f.name ) ) ) } )
-             }, {} )
+                 return i.concat({ [ name ]: baseItem( name, require( path.join( fullPath, f.name ) ) ) } )
+             }, [] )
 }
 
 const toggleDelete = ( isDelete, mongoCollection ) => ( _id ) => new Promise( ( resolve, reject ) => {
