@@ -189,14 +189,12 @@ const connect = ()=> new Promise( ( resolve, reject ) => {
 } )
 
 let dbSymbol = Symbol.for( "muffins.db")
-let dbConfig = {
-    current: {}
-};
+let dbConfig;
 module.exports = {
     dbSymbol: dbSymbol,
     async get(){
-        if(!dbConfig.current) throw "you must init muffins with the config before getting the db"
+        if(!dbConfig) throw "you must init muffins with the config before getting the db"
         return global[dbSymbol] ? global[dbSymbol] : connect()
     },
-    init: ( config ) => dbConfig.current = config
+    init: ( config ) => dbConfig = config
 }
