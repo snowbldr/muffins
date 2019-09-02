@@ -17,15 +17,17 @@ Somewhere in your app, you must init muffins with a config object. This should h
 ```js
 require('muffins').init({
     url: "mongodb://localhost/muffins",
-    schemas: [{"muffins": {
-                  type: 'object',
-                  properties: {
-                      flavor: {
-                          type: { 'enum': [ "blueberry", "lemon poppy seed", "chocolate"] }
-                      }
-                  },
-                  required: [ 'flavor' ]
-              }}],
+    schemas: [{
+        collection: "muffins",
+        schema: {
+              type: 'object',
+              properties: {
+                  flavor: {
+                      type: { 'enum': [ "blueberry", "lemon poppy seed", "chocolate"] }
+                  }
+              },
+              required: [ 'flavor' ]
+          }}],
     conn: {
         poolSize: 100
     }
@@ -64,7 +66,8 @@ schemas should be a set of objects with a single property that is the collection
 
 ```js
 let muffins ={
-    "muffins": {
+    collection: "muffins", 
+    schema: {
         type: 'object',
         properties: {
             flavor: {
