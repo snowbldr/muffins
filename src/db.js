@@ -155,7 +155,9 @@ const connect = ()=> new Promise( ( resolve, reject ) => {
     MongoClient.connect( dbConfig.url, {
         poolSize: dbConfig.poolSize || 20,
         useNewUrlParser: true,
-        useUnifiedTopology: true
+        useUnifiedTopology: true,
+        reconnectTries: Number.MAX_VALUE,
+        bufferMaxEntries: 0
     }, ( err, client ) => {
         if( err ) {
             reject( err )
