@@ -183,7 +183,7 @@ const connect = ()=> new Promise( ( resolve, reject ) => {
         if(Object.getOwnPropertySymbols(global).indexOf(dbSymbol) === -1){
             global[dbSymbol] = db
         }
-        Console.log("muffins ready!")
+        console.log("muffins ready!")
         resolve( db )
     } )
 } )
