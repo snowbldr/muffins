@@ -161,16 +161,18 @@ const connect = ()=> new Promise( ( resolve, reject ) => {
         if(!schemas){
             throw new Error("You must provide schemas")
         }
-        for( let schemaName in schemas ) {
-            tv4.addSchema( schemaName, schemas[ schemaName ] )
+        for( let schemaInfo of schemas ) {
+            let collection = schemaInfo.collection
+            let schema = schemaInfo.schema
+            tv4.addSchema( collection, schema )
 
-            let mongoCollection = mongodb.collection( schemaName )
+            let mongoCollection = mongodb.collection( collection )
 
-            createIndices( schemas[ schemaName ].properties, null, mongoCollection )
+            createIndices( schema.properties, null, mongoCollection )
 
-            db[ schemaName ] = dbCollection(
-                schemaName,
-                ( item ) => tv4.validateMultiple( item, schemaName, true, true ),
+            db[ collection ] = dbCollection(
+                collection,
+                ( item ) => tv4.validateMultiple( item, collection, true, true ),
                 mongoCollection
             )
         }

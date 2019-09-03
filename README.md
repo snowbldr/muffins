@@ -85,6 +85,26 @@ You can overwrite any default by setting it.
 
 You can provide additional settings to the `MongoClient.connect()` call by setting them on `config.conn`.
 
+###Indexes
+To create an index for any given property of a schema, add a property `index: {}` to the property in the schema.
+
+You can make the index unique by setting `index: {unique: true}`
+
+example
+```js
+{
+    type: 'object',
+    properties: {
+        flavor: {
+            type: { 'enum': [ "blueberry", "lemon poppy seed", "chocolate"] },
+            index: {}
+        }
+    },
+    required: [ 'flavor' ]
+}
+```
+
+
 ###db
 The object returned by the db method has the following methods
 ```js
