@@ -203,7 +203,8 @@ module.exports = {
                 reconnectTries: Number.MAX_VALUE,
                 bufferMaxEntries: 0,
                 socketTimeoutMS: 3000,
-                connectTimeoutMS: 10000
+                connectTimeoutMS: 10000,
+                wtimeout: 3000
             },
             config.conn
         )
