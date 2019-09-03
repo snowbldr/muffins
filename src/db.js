@@ -157,7 +157,8 @@ const connect = ()=> new Promise( ( resolve, reject ) => {
         }
         let mongodb = client.db()
         let db = {}
-        let schemas = [].concat(findSchemas( dbConfig.schemaDir )).concat(dbConfig.schemas)
+        let schemas = findSchemas( dbConfig.schemaDir )
+        if(dbConfig.schemas) schemas.concat(dbConfig.schemas)
         if(!schemas){
             throw new Error("You must provide schemas")
         }
