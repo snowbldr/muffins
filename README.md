@@ -54,7 +54,8 @@ Muffins config with defaults:
         reconnectTries: Number.MAX_VALUE,
         bufferMaxEntries: 0,
         socketTimeoutMS: 3000,
-        connectTimeoutMS: 10000
+        connectTimeoutMS: 3000,
+        serverSelectionTimeoutMS: 3000
     }
 }
 ```
