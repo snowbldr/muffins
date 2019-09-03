@@ -59,6 +59,8 @@ Muffins config with defaults:
     }
 }
 ```
+These settings will ensure that the server recovers if mongo goes down and is restored.
+
 Url and either schemaDir or schemas is required.
 
 Both schemaDir and schemas can be provided.
