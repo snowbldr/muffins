@@ -204,7 +204,7 @@ module.exports = {
                 bufferMaxEntries: 0,
                 socketTimeoutMS: 3000,
                 connectTimeoutMS: 10000,
-                wtimeout: 3000
+                serverSelectionTimeoutMS: 3000
             },
             config.conn
         )
