@@ -1,7 +1,6 @@
-const MongoClient = require( 'mongodb' ).MongoClient
-const tv4 = new require( 'tv4' )
+const {MongoClient, ObjectID} = require('mongodb')
+const tv4 = new (require( 'tv4' ))
 const fs = require( 'fs' )
-const uuid = require( 'uuid/v4' )
 const path = require( 'path' )
 const baseItem = require( './baseItem' )
 
@@ -49,8 +48,8 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
     save: ( newDoc, allowUpdateToDeletedRecord = false ) => new Promise( ( resolve, reject ) => {
         let validation = validate( newDoc )
 
-        if( !newDoc._id ) {
-            newDoc._id = uuid()
+        if( !newDoc._created) {
+            if(!newDoc._id) newDoc._id = new ObjectID
             newDoc._created = new Date().getTime()
             newDoc._updated = null
             newDoc._isDeleted = false
