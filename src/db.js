@@ -1,6 +1,5 @@
 const {MongoClient, ObjectID} = require('mongodb')
-let TV4 = require( 'tv4' )
-const tv4 = new TV4()
+const tv4 = require( 'tv4' )
 const fs = require( 'fs' )
 const path = require( 'path' )
 const baseItem = require( './baseItem' )
