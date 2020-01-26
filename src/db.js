@@ -64,13 +64,13 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
             } ) ) )
         }
 
-        let query = { _id: newDoc._id }
-        if( !allowUpdateToDeletedRecord ) {
-            query._isDeleted = false
-        }
         if( isNew ) {
             mongoCollection.insert(newDoc)
         } else {
+            let query = { _id: new ObjectID(newDoc._id) }
+            if( !allowUpdateToDeletedRecord ) {
+                query._isDeleted = false
+            }
             let update={...newDoc}
             delete update._created
             delete update._id
