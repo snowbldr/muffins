@@ -1,4 +1,4 @@
-const {MongoClient, ObjectID} = require('mongodb')
+const { MongoClient, ObjectID } = require( 'mongodb' )
 const tv4 = require( 'tv4' )
 const fs = require( 'fs' )
 const path = require( 'path' )
@@ -7,25 +7,25 @@ const baseItem = require( './baseItem' )
 /**
  * An error with a suggested http status error code
  */
-const DBError = (code, message, errors) => (
+const DBError = ( code, message, errors ) => (
     {
         statusCode: code,
         body: {
-            errors: errors ? (Array.isArray(errors) ? errors : [errors]).map(e => e.message ? e : {message: e}) : []
+            errors: errors ? ( Array.isArray( errors ) ? errors : [ errors ] ).map( e => e.message ? e : { message: e } ) : []
         },
         statusMessage: message
     }
 )
 
 const findSchemas = ( schemaDir ) => {
-    if(!schemaDir) return []
+    if( !schemaDir ) return []
     let fullPath = path.resolve( schemaDir )
     return fs.readdirSync( fullPath, { withFileTypes: true } )
              .filter( f => !f.isDirectory() )
-             .filter( f => f.name.endsWith( '.js' ) || f.name.endsWith('.json') )
+             .filter( f => f.name.endsWith( '.js' ) || f.name.endsWith( '.json' ) )
              .reduce( ( i, f ) => {
                  let name = f.name.split( '.js' )[ 0 ]
-                 return i.concat({ collection: name, schema: baseItem( name, require( path.join( fullPath, f.name ) ) ) } )
+                 return i.concat( { collection: name, schema: baseItem( name, require( path.join( fullPath, f.name ) ) ) } )
              }, [] )
 }
 
@@ -47,9 +47,9 @@ const toggleDelete = ( isDelete, mongoCollection ) => ( _id ) => new Promise( ( 
 const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
     save: ( newDoc, allowUpdateToDeletedRecord = false ) => new Promise( ( resolve, reject ) => {
         let validation = validate( newDoc )
-
-        if( !newDoc._created) {
-            if(!newDoc._id) newDoc._id = new ObjectID
+        let isNew = !newDoc._id
+        if( isNew ) {
+            newDoc._id = new ObjectID
             newDoc._created = new Date().getTime()
             newDoc._updated = null
             newDoc._isDeleted = false
@@ -65,16 +65,23 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         }
 
         let query = { _id: newDoc._id }
-        if(!allowUpdateToDeletedRecord) {
+        if( !allowUpdateToDeletedRecord ) {
             query._isDeleted = false
         }
-        mongoCollection.updateOne( query, { $set: newDoc }, { upsert: true }, ( err, res ) => {
-            if( err ) {
-                reject( err )
-            } else {
-                res.upsertedCount === 1 || res.modifiedCount ? resolve( newDoc ) : reject( DBError( 404, `${schemaName} not found`, `${schemaName} not found` ) )
-            }
-        } )
+        if( isNew ) {
+            mongoCollection.insert(newDoc)
+        } else {
+            let update={...newDoc}
+            delete update._created
+            delete update._id
+            mongoCollection.updateOne( query, { $set: update }, ( err, res ) => {
+                if( err ) {
+                    reject( err )
+                } else {
+                    res.upsertedCount === 1 || res.modifiedCount ? resolve( newDoc ) : reject( DBError( 404, `${schemaName} not found`, `${schemaName} not found` ) )
+                }
+            } )
+        }
     } ),
     find: ( page, pageSize, query, includeDeleted = false ) => new Promise( ( resolve, reject ) => {
         let limit = pageSize && parseInt( pageSize ) || 10
@@ -91,7 +98,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
             throw DBError( 400, '_id required', 'You must include an _id field with your patch' )
         }
         let query = { _id: patch._id }
-        if(!allowUpdateToDeletedRecord) {
+        if( !allowUpdateToDeletedRecord ) {
             query._isDeleted = false
         }
         mongoCollection.findOne( query, ( err, doc ) => {
@@ -139,8 +146,8 @@ const createIndices = ( props, currPath, collection ) => {
     if( props && typeof props === 'object' ) {
         Object.keys( props )
               .forEach( k => {
-                  if( typeof props[ k ].index === "object" ) {
-                      collection.createIndex( { [ currPath ? currPath + "." + k : k ]: 1 }, props[k].index)
+                  if( typeof props[ k ].index === 'object' ) {
+                      collection.createIndex( { [ currPath ? currPath + '.' + k : k ]: 1 }, props[ k ].index )
                   } else {
                       createIndices( props[ k ], currPath ? currPath + '.' + k : k, collection )
                   }
@@ -148,7 +155,7 @@ const createIndices = ( props, currPath, collection ) => {
     }
 }
 
-const connect = ()=> new Promise( ( resolve, reject ) => {
+const connect = () => new Promise( ( resolve, reject ) => {
     MongoClient.connect( dbConfig.url, dbConfig.conn, ( err, client ) => {
         if( err ) {
             reject( err )
@@ -157,9 +164,9 @@ const connect = ()=> new Promise( ( resolve, reject ) => {
         let mongodb = client.db()
         let db = {}
         let schemas = findSchemas( dbConfig.schemaDir )
-        if(dbConfig.schemas) schemas.concat(dbConfig.schemas)
-        if(!schemas){
-            throw new Error("You must provide schemas")
+        if( dbConfig.schemas ) schemas.concat( dbConfig.schemas )
+        if( !schemas ) {
+            throw new Error( 'You must provide schemas' )
         }
         for( let schemaInfo of schemas ) {
             let collection = schemaInfo.collection
@@ -176,21 +183,21 @@ const connect = ()=> new Promise( ( resolve, reject ) => {
                 mongoCollection
             )
         }
-        if(Object.getOwnPropertySymbols(global).indexOf(dbSymbol) === -1){
-            global[dbSymbol] = db
+        if( Object.getOwnPropertySymbols( global ).indexOf( dbSymbol ) === -1 ) {
+            global[ dbSymbol ] = db
         }
-        console.log("muffins ready!")
+        console.log( 'muffins ready!' )
         resolve( db )
     } )
 } )
 
-let dbSymbol = Symbol.for( "muffins.db")
-let dbConfig;
+let dbSymbol = Symbol.for( 'muffins.db' )
+let dbConfig
 module.exports = {
     dbSymbol: dbSymbol,
-    async get(){
-        if(!dbConfig) throw "you must init muffins with the config before getting the db"
-        return global[dbSymbol] ? global[dbSymbol] : connect()
+    async get() {
+        if( !dbConfig ) throw 'you must init muffins with the config before getting the db'
+        return global[ dbSymbol ] ? global[ dbSymbol ] : connect()
     },
     init: ( config ) => {
         dbConfig = config
