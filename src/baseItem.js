@@ -4,16 +4,16 @@ module.exports = (name, schema) => ({
     properties: Object.assign(
         {
             _id: {
-                type: 'string'
+                type: 'string, null'
             },
             _created: {
-                type: 'number'
+                type: 'number, null'
             },
             _updated: {
-                type: 'number'
+                type: 'number, null'
             },
-            _deleted: {
-                type: 'number'
+            _deletedDate: {
+                type: 'number, null'
             },
             _isDeleted: {
                 type: 'boolean'

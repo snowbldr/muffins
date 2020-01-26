@@ -34,7 +34,7 @@ const toggleDelete = ( isDelete, mongoCollection ) => ( _id ) => new Promise( ( 
         throw DBError( 400, '_id required', 'you must supply an _id to delete' )
     }
 
-    let op = { $set: { _isDeleted: isDelete, _deleted: isDelete ? new Date().getTime() : null } }
+    let op = { $set: { _isDeleted: isDelete, _deletedDate: isDelete ? new Date().getTime() : null } }
     mongoCollection.updateOne( { _id: _id }, op, ( err, r ) => {
         if( err ) {
             reject( err )
@@ -66,7 +66,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
 
         let query = { _id: newDoc._id }
         if(!allowUpdateToDeletedRecord) {
-            query._deleted = false
+            query._isDeleted = false
         }
         mongoCollection.updateOne( query, { $set: newDoc }, { upsert: true }, ( err, res ) => {
             if( err ) {
@@ -92,7 +92,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         }
         let query = { _id: patch._id }
         if(!allowUpdateToDeletedRecord) {
-            query._deleted = false
+            query._isDeleted = false
         }
         mongoCollection.findOne( query, ( err, doc ) => {
             let newDoc = Object.assign( {}, doc, patch )
