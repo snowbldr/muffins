@@ -94,10 +94,13 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
     find: ( page, pageSize, query, includeDeleted = false ) => new Promise( ( resolve, reject ) => {
         let limit = pageSize && parseInt( pageSize ) || 10
         let skip = ( page && parseInt( page ) || 0 ) * limit
-
+        let q = query
         let deletedQuery = includeDeleted ? {} : { _isDeleted: false }
+        if(query._id && typeof query._id === 'string'){
+            q._id = new Object(query._id)
+        }
 
-        mongoCollection.find( Object.assign( ( query || {} ), deletedQuery ), { limit, skip } ).toArray( ( err, docs ) => {
+        mongoCollection.find( Object.assign( ( q || {} ), deletedQuery ), { limit, skip } ).toArray( ( err, docs ) => {
             err ? reject( err ) : resolve( docs )
         } )
     } ),
@@ -105,7 +108,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         if( !patch._id ) {
             throw DBError( 400, '_id required', 'You must include an _id field with your patch' )
         }
-        let query = { _id: patch._id }
+        let query = { _id: typeof patch._id === 'string'? new ObjectID(patch._id) : patch._id }
         if( !allowUpdateToDeletedRecord ) {
             query._isDeleted = false
         }
