@@ -97,7 +97,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         let q = query
         let deletedQuery = includeDeleted ? {} : { _isDeleted: false }
         if(query._id && typeof query._id === 'string'){
-            q._id = new Object(query._id)
+            q._id = new ObjectID(query._id)
         }
 
         mongoCollection.find( Object.assign( ( q || {} ), deletedQuery ), { limit, skip } ).toArray( ( err, docs ) => {
