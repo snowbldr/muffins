@@ -65,7 +65,9 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         }
 
         if( isNew ) {
-            mongoCollection.insert(newDoc)
+            mongoCollection.insertOne(newDoc, (err, res)=>{
+                if(err) throw err
+            })
         } else {
             let query = { _id: new ObjectID(newDoc._id) }
             if( !allowUpdateToDeletedRecord ) {
