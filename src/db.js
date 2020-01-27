@@ -66,7 +66,13 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
 
         if( isNew ) {
             mongoCollection.insertOne(newDoc, (err, res)=>{
-                if(err) throw err
+                if(err) reject(err)
+                else {
+                    if(res.insertedCount === 1)
+                        resolve(newDoc)
+                    else
+                        reject("failed to insert")
+                }
             })
         } else {
             let query = { _id: typeof newDoc._id === 'string' ? new ObjectID(newDoc._id) : newDoc._id }
