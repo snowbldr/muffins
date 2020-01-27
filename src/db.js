@@ -69,7 +69,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
                 if(err) throw err
             })
         } else {
-            let query = { _id: new ObjectID(newDoc._id) }
+            let query = { _id: typeof newDoc._id === 'string' ? new ObjectID(newDoc._id) : newDoc._id }
             if( !allowUpdateToDeletedRecord ) {
                 query._isDeleted = false
             }

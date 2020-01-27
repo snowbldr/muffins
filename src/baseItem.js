@@ -4,7 +4,7 @@ module.exports = (name, schema) => ({
     properties: Object.assign(
         {
             _id: {
-                type: ['string', 'null']
+                type: ['object']
             },
             _created: {
                 type: ['number', 'null']
