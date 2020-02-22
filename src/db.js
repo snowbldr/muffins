@@ -91,10 +91,10 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
             } )
         }
     } ),
-    find: ( page, pageSize, query, includeDeleted = false ) => new Promise( ( resolve, reject ) => {
+    find: ( page, pageSize, query = {}, includeDeleted = false ) => new Promise( ( resolve, reject ) => {
         let limit = pageSize && parseInt( pageSize ) || 10
         let skip = ( page && parseInt( page ) || 0 ) * limit
-        let q = query
+        let q = query || throw "Query must be defined"
         let deletedQuery = includeDeleted ? {} : { _isDeleted: false }
         if(query._id && typeof query._id === 'string'){
             q._id = new ObjectID(query._id)
