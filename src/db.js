@@ -30,7 +30,7 @@ const findSchemas = ( schemaDir ) => {
 }
 
 const toggleDelete = ( isDelete, mongoCollection ) => ( _id ) => new Promise( ( resolve, reject ) => {
-    _id = toObjectId(_id)
+    _id = stringToObjectId( _id )
     if( !_id ) {
         throw DBError( 400, '_id required', 'you must supply an _id to delete' )
     }
@@ -45,19 +45,26 @@ const toggleDelete = ( isDelete, mongoCollection ) => ( _id ) => new Promise( ( 
     } )
 } )
 
-const toObjectId = (id)=>id && typeof id === 'string' ? new ObjectID(id) : id
+const stringToObjectId = ( id ) => id && typeof id === 'string' ? new ObjectID( id ) : id
+const objectIdToString = ( id ) => id && id.toString() || id
+const _idToObjectId = ( obj ) => {
+    if( obj && obj._id ) {
+        obj._id = stringToObjectId( obj._id )
+    }
+    return obj
+}
 
-const ensureIdIsObjectId = (obj)=>{
-    if(obj && obj._id) {
-        obj._id = toObjectId(obj._id)
+const _idToString = ( obj ) => {
+    if( obj && obj._id ) {
+        obj._id = objectIdToString( obj._id )
     }
     return obj
 }
 
 const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
     save: ( newDoc, allowUpdateToDeletedRecord = false ) => new Promise( ( resolve, reject ) => {
-        ensureIdIsObjectId(newDoc)
         let validation = validate( newDoc )
+        _idToObjectId( newDoc )
         let isNew = !newDoc._id
         if( isNew ) {
             newDoc._id = new ObjectID
@@ -76,28 +83,28 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         }
 
         if( isNew ) {
-            mongoCollection.insertOne(newDoc, (err, res)=>{
-                if(err) reject(err)
+            mongoCollection.insertOne( newDoc, ( err, res ) => {
+                if( err ) reject( err )
                 else {
-                    if(res.insertedCount === 1)
-                        resolve(newDoc)
+                    if( res.insertedCount === 1 )
+                        resolve( _idToString( newDoc ) )
                     else
-                        reject("failed to insert")
+                        reject( 'failed to insert' )
                 }
-            })
+            } )
         } else {
-            let query = { _id: typeof newDoc._id === 'string' ? new ObjectID(newDoc._id) : newDoc._id }
+            let query = { _id: typeof newDoc._id === 'string' ? new ObjectID( newDoc._id ) : newDoc._id }
             if( !allowUpdateToDeletedRecord ) {
                 query._isDeleted = false
             }
-            let update={...newDoc}
+            let update = { ...newDoc }
             delete update._created
             delete update._id
             mongoCollection.updateOne( query, { $set: update }, ( err, res ) => {
                 if( err ) {
                     reject( err )
                 } else {
-                    res.upsertedCount === 1 || res.modifiedCount ? resolve( newDoc ) : reject( DBError( 404, `${schemaName} not found`, `${schemaName} not found` ) )
+                    res.upsertedCount === 1 || res.modifiedCount ? resolve( _idToString( newDoc ) ) : reject( DBError( 404, `${schemaName} not found`, `${schemaName} not found` ) )
                 }
             } )
         }
@@ -105,20 +112,20 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
     find: ( page, pageSize, query = {}, includeDeleted = false ) => new Promise( ( resolve, reject ) => {
         let limit = pageSize && parseInt( pageSize ) || 10
         let skip = ( page && parseInt( page ) || 0 ) * limit
-        if(!query) throw "Query must be defined"
+        if( !query ) throw 'Query must be defined'
         let q = query
         let deletedQuery = includeDeleted ? {} : { _isDeleted: false }
-        ensureIdIsObjectId(query)
+        _idToObjectId( query )
 
         mongoCollection.find( Object.assign( ( q || {} ), deletedQuery ), { limit, skip } ).toArray( ( err, docs ) => {
-            err ? reject( err ) : resolve( docs )
+            err ? reject( err ) : resolve( docs.map( _idToString ) )
         } )
     } ),
     patch: ( patch, allowUpdateToDeletedRecord = false ) => new Promise( ( resolve, reject ) => {
         if( !patch._id ) {
             throw DBError( 400, '_id required', 'You must include an _id field with your patch' )
         }
-        ensureIdIsObjectId(patch)
+        _idToObjectId( patch )
         let query = { _id: patch._id }
         if( !allowUpdateToDeletedRecord ) {
             query._isDeleted = false
@@ -137,7 +144,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
                 if( err ) {
                     reject( err )
                 } else {
-                    res.modifiedCount === 1 ? resolve( newDoc ) : reject( DBError( 404, `${schemaName} not found`, `${schemaName} not found` ) )
+                    res.modifiedCount === 1 ? resolve( _idToString( newDoc ) ) : reject( DBError( 404, `${schemaName} not found`, `${schemaName} not found` ) )
                 }
             } )
         } )
