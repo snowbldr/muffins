@@ -1,5 +1,10 @@
-const db = require('./src/db')
+const db = require( './src/db' )
 module.exports = {
     init: db.init,
-    db: db.get
+    db: db.get,
+    withDb( fun ) {
+        return async function() {
+            return fun( await db(), ...arguments )
+        }
+    }
 }
