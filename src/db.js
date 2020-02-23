@@ -47,9 +47,16 @@ const toggleDelete = ( isDelete, mongoCollection ) => ( _id ) => new Promise( ( 
 
 const toObjectId = (id)=>id && typeof id === 'string' ? new ObjectID(id) : id
 
+const ensureIdIsObjectId = (obj)=>{
+    if(obj && obj._id) {
+        obj._id = toObjectId(obj._id)
+    }
+    return obj
+}
+
 const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
     save: ( newDoc, allowUpdateToDeletedRecord = false ) => new Promise( ( resolve, reject ) => {
-        newDoc._id = toObjectId(newDoc._id)
+        ensureIdIsObjectId(newDoc)
         let validation = validate( newDoc )
         let isNew = !newDoc._id
         if( isNew ) {
@@ -101,7 +108,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         if(!query) throw "Query must be defined"
         let q = query
         let deletedQuery = includeDeleted ? {} : { _isDeleted: false }
-        query._id = toObjectId(query._id)
+        ensureIdIsObjectId(query)
 
         mongoCollection.find( Object.assign( ( q || {} ), deletedQuery ), { limit, skip } ).toArray( ( err, docs ) => {
             err ? reject( err ) : resolve( docs )
@@ -111,7 +118,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         if( !patch._id ) {
             throw DBError( 400, '_id required', 'You must include an _id field with your patch' )
         }
-        patch._id = toObjectId(patch._id)
+        ensureIdIsObjectId(patch)
         let query = { _id: patch._id }
         if( !allowUpdateToDeletedRecord ) {
             query._isDeleted = false
