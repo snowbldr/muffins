@@ -30,6 +30,7 @@ const findSchemas = ( schemaDir ) => {
 }
 
 const toggleDelete = ( isDelete, mongoCollection ) => ( _id ) => new Promise( ( resolve, reject ) => {
+    _id = toObjectId(_id)
     if( !_id ) {
         throw DBError( 400, '_id required', 'you must supply an _id to delete' )
     }
@@ -44,8 +45,11 @@ const toggleDelete = ( isDelete, mongoCollection ) => ( _id ) => new Promise( ( 
     } )
 } )
 
+const toObjectId = (id)=>id && typeof id === 'string' ? new ObjectID(id) : id
+
 const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
     save: ( newDoc, allowUpdateToDeletedRecord = false ) => new Promise( ( resolve, reject ) => {
+        newDoc._id = toObjectId(newDoc._id)
         let validation = validate( newDoc )
         let isNew = !newDoc._id
         if( isNew ) {
@@ -97,9 +101,7 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         if(!query) throw "Query must be defined"
         let q = query
         let deletedQuery = includeDeleted ? {} : { _isDeleted: false }
-        if(query._id && typeof query._id === 'string'){
-            q._id = new ObjectID(query._id)
-        }
+        query._id = toObjectId(query._id)
 
         mongoCollection.find( Object.assign( ( q || {} ), deletedQuery ), { limit, skip } ).toArray( ( err, docs ) => {
             err ? reject( err ) : resolve( docs )
@@ -109,7 +111,8 @@ const dbCollection = ( schemaName, validate, mongoCollection ) => ( {
         if( !patch._id ) {
             throw DBError( 400, '_id required', 'You must include an _id field with your patch' )
         }
-        let query = { _id: typeof patch._id === 'string'? new ObjectID(patch._id) : patch._id }
+        patch._id = toObjectId(patch._id)
+        let query = { _id: patch._id }
         if( !allowUpdateToDeletedRecord ) {
             query._isDeleted = false
         }
