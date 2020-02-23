@@ -4,7 +4,7 @@ module.exports = {
     db: db.get,
     withDb( fun ) {
         return async function() {
-            return fun( await db(), ...arguments )
+            return fun( await db.get(), ...arguments )
         }
     }
 }
